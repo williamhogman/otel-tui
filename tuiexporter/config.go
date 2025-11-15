@@ -7,6 +7,7 @@ type Config struct {
 	FromJSONFile     bool   `mapstructure:"from_json_file"`
 	DebugLogFilePath string `mapstructure:"debug_log_file_path"`
 	HTTPPort         int    `mapstructure:"http_port"` // Port for HTTP API server (0 = disabled)
+	ServerOnly       bool   `mapstructure:"server_only"` // Run in headless mode without TUI
 }
 
 var _ component.Config = (*Config)(nil)

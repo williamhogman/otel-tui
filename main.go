@@ -53,6 +53,7 @@ func newCommand(params otelcol.CollectorSettings) *cobra.Command {
 		fromJSONFileFlag                            string
 		debugLogFlag                                bool
 		disableInternalMetricsFlag                  bool
+		serverOnlyFlag                              bool
 	)
 
 	rootCmd := &cobra.Command{
@@ -75,6 +76,7 @@ func newCommand(params otelcol.CollectorSettings) *cobra.Command {
 				promTargetFlag,
 				logPath,
 				disableInternalMetricsFlag,
+				serverOnlyFlag,
 			)
 
 			if err != nil {
@@ -112,6 +114,7 @@ func newCommand(params otelcol.CollectorSettings) *cobra.Command {
 	rootCmd.Flags().StringArrayVar(&promTargetFlag, "prom-target", []string{}, `Enable the prometheus receiver and specify the target endpoints for the receiver (--prom-target "localhost:9000" --prom-target "http://other-host:9000/custom/prometheus")`)
 	rootCmd.Flags().BoolVar(&debugLogFlag, "debug-log", false, "Enable debug log output to file (/tmp/otel-tui.log)")
 	rootCmd.Flags().BoolVar(&disableInternalMetricsFlag, "disable-internal-metrics", false, "Disable the collector's internal metrics telemetry reporting")
+	rootCmd.Flags().BoolVar(&serverOnlyFlag, "server-only", false, "Run in headless mode without TUI (HTTP API only)")
 	return rootCmd
 }
 

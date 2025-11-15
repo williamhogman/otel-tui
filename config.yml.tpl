@@ -53,6 +53,7 @@ exporters:
     from_json_file: {{ if .FromJSONFile }}true{{else}}false{{end}}
     debug_log_file_path: '{{ .DebugLogFilePath }}'
     http_port: {{ .HTTPAPIPort }}
+    server_only: {{ if .ServerOnly }}true{{else}}false{{end}}
 service:
 {{- if .DisableInternalMetrics}}
   telemetry:

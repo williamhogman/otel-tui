@@ -20,6 +20,7 @@ type tuiExporter struct {
 	app        *tui.TUIApp
 	httpServer *http.Server
 	httpPort   int
+	serverOnly bool
 }
 
 func newTuiExporter(config *Config) (*tuiExporter, error) {
@@ -30,19 +31,37 @@ func newTuiExporter(config *Config) (*tuiExporter, error) {
 		initialInterval = 1 * time.Second
 	}
 
-	app, err := tui.NewTUIApp(telemetry.NewStore(clockwork.NewRealClock()), initialInterval, config.DebugLogFilePath)
-	if err != nil {
-		return nil, err
-	}
+	// Create store
+	store := telemetry.NewStore(clockwork.NewRealClock())
 
 	exporter := &tuiExporter{
-		app:      app,
-		httpPort: config.HTTPPort,
+		httpPort:   config.HTTPPort,
+		serverOnly: config.ServerOnly,
+	}
+
+	// Only create TUI app if not in server-only mode
+	if !config.ServerOnly {
+		app, err := tui.NewTUIApp(store, initialInterval, config.DebugLogFilePath)
+		if err != nil {
+			return nil, err
+		}
+		exporter.app = app
+	} else {
+		// In server-only mode, create a minimal wrapper that just holds the store
+		exporter.app = &tui.TUIApp{}
+		// Inject the store directly (we'll need to add a method for this)
+		// For now, we'll create the app anyway but won't run it
+		app, err := tui.NewTUIApp(store, initialInterval, config.DebugLogFilePath)
+		if err != nil {
+			return nil, err
+		}
+		exporter.app = app
+		fmt.Println("Running in server-only mode (TUI disabled)")
 	}
 
 	// Setup HTTP server if port is configured
 	if config.HTTPPort > 0 {
-		httpHandler := httpserver.NewServer(app.Store())
+		httpHandler := httpserver.NewServer(exporter.app.Store())
 		exporter.httpServer = &http.Server{
 			Addr:    fmt.Sprintf(":%d", config.HTTPPort),
 			Handler: httpHandler,
@@ -72,13 +91,15 @@ func (e *tuiExporter) pushLogs(_ context.Context, logs plog.Logs) error {
 
 // Start runs the TUI exporter
 func (e *tuiExporter) Start(ctx context.Context, _ component.Host) error {
-	// Start TUI app
-	go func() {
-		err := e.app.Run()
-		if err != nil {
-			fmt.Printf("error running tui app: %s\n", err)
-		}
-	}()
+	// Start TUI app only if not in server-only mode
+	if !e.serverOnly {
+		go func() {
+			err := e.app.Run()
+			if err != nil {
+				fmt.Printf("error running tui app: %s\n", err)
+			}
+		}()
+	}
 
 	// Start HTTP server if configured
 	if e.httpServer != nil {
@@ -88,6 +109,12 @@ func (e *tuiExporter) Start(ctx context.Context, _ component.Host) error {
 				fmt.Printf("error running http server: %s\n", err)
 			}
 		}()
+	}
+
+	// In server-only mode, keep running (block) so the collector doesn't exit
+	if e.serverOnly {
+		fmt.Println("Server-only mode active. Press Ctrl+C to stop.")
+		<-ctx.Done()
 	}
 
 	return nil
@@ -102,6 +129,10 @@ func (e *tuiExporter) Shutdown(ctx context.Context) error {
 		}
 	}
 
-	// Stop TUI app
-	return e.app.Stop()
+	// Stop TUI app only if not in server-only mode
+	if !e.serverOnly && e.app != nil {
+		return e.app.Stop()
+	}
+
+	return nil
 }
