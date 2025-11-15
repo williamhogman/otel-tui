@@ -193,6 +193,8 @@ exporters:
   tui:
     from_json_file: true
     debug_log_file_path: '/tmp/otel-tui.log'
+    http_port: 0
+    server_only: false
 service:
   telemetry:
     metrics:
@@ -253,6 +255,8 @@ exporters:
   tui:
     from_json_file: false
     debug_log_file_path: ''
+    http_port: 0
+    server_only: false
 service:
   pipelines:
     traces:
