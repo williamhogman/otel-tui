@@ -25,7 +25,13 @@
         };
         devShells = {
           default = pkgs.mkShell {
-            packages = [ otel-tui ];
+            packages = [
+              otel-tui
+              pkgs.go
+              pkgs.gopls
+              pkgs.gotools
+              pkgs.go-tools
+            ];
           };
           otel-tui = pkgs.mkShell {
             packages = [ otel-tui ];
