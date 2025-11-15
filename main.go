@@ -46,13 +46,13 @@ func runInteractive(params otelcol.CollectorSettings) error {
 
 func newCommand(params otelcol.CollectorSettings) *cobra.Command {
 	var (
-		httpPortFlag, grpcPortFlag int
-		hostFlag                   string
-		zipkinEnabledFlag          bool
-		promTargetFlag             []string
-		fromJSONFileFlag           string
-		debugLogFlag               bool
-		disableInternalMetricsFlag bool
+		httpPortFlag, grpcPortFlag, httpAPIPortFlag int
+		hostFlag                                    string
+		zipkinEnabledFlag                           bool
+		promTargetFlag                              []string
+		fromJSONFileFlag                            string
+		debugLogFlag                                bool
+		disableInternalMetricsFlag                  bool
 	)
 
 	rootCmd := &cobra.Command{
@@ -69,6 +69,7 @@ func newCommand(params otelcol.CollectorSettings) *cobra.Command {
 				hostFlag,
 				httpPortFlag,
 				grpcPortFlag,
+				httpAPIPortFlag,
 				zipkinEnabledFlag,
 				fromJSONFileFlag,
 				promTargetFlag,
@@ -104,6 +105,7 @@ func newCommand(params otelcol.CollectorSettings) *cobra.Command {
 
 	rootCmd.Flags().IntVar(&httpPortFlag, "http", 4318, "The port number on which we listen for OTLP http payloads")
 	rootCmd.Flags().IntVar(&grpcPortFlag, "grpc", 4317, "The port number on which we listen for OTLP grpc payloads")
+	rootCmd.Flags().IntVar(&httpAPIPortFlag, "http-api-port", 8000, "The port number for the HTTP API server (0 to disable)")
 	rootCmd.Flags().StringVar(&hostFlag, "host", "0.0.0.0", "The host where we expose our OTLP endpoints")
 	rootCmd.Flags().BoolVar(&zipkinEnabledFlag, "enable-zipkin", false, "Enable the zipkin receiver")
 	rootCmd.Flags().StringVar(&fromJSONFileFlag, "from-json-file", "", "The JSON file path exported by JSON exporter")
