@@ -356,7 +356,7 @@ func matchesLogFilters(log *telemetry.LogData, params LogFilterParams) bool {
 
 	// Minimum severity filter
 	if params.MinSeverity > 0 {
-		if log.Log.SeverityNumber() < params.MinSeverity {
+		if int32(log.Log.SeverityNumber()) < params.MinSeverity {
 			return false
 		}
 	}
