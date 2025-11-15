@@ -3,9 +3,11 @@ package tuiexporter
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/jonboulle/clockwork"
+	"github.com/ymtdzzz/otel-tui/tuiexporter/internal/httpserver"
 	"github.com/ymtdzzz/otel-tui/tuiexporter/internal/telemetry"
 	"github.com/ymtdzzz/otel-tui/tuiexporter/internal/tui"
 	"go.opentelemetry.io/collector/component"
@@ -15,7 +17,9 @@ import (
 )
 
 type tuiExporter struct {
-	app *tui.TUIApp
+	app        *tui.TUIApp
+	httpServer *http.Server
+	httpPort   int
 }
 
 func newTuiExporter(config *Config) (*tuiExporter, error) {
@@ -30,9 +34,22 @@ func newTuiExporter(config *Config) (*tuiExporter, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &tuiExporter{
-		app: app,
-	}, nil
+
+	exporter := &tuiExporter{
+		app:      app,
+		httpPort: config.HTTPPort,
+	}
+
+	// Setup HTTP server if port is configured
+	if config.HTTPPort > 0 {
+		httpHandler := httpserver.NewServer(app.Store())
+		exporter.httpServer = &http.Server{
+			Addr:    fmt.Sprintf(":%d", config.HTTPPort),
+			Handler: httpHandler,
+		}
+	}
+
+	return exporter, nil
 }
 
 func (e *tuiExporter) pushTraces(_ context.Context, traces ptrace.Traces) error {
@@ -54,17 +71,37 @@ func (e *tuiExporter) pushLogs(_ context.Context, logs plog.Logs) error {
 }
 
 // Start runs the TUI exporter
-func (e *tuiExporter) Start(_ context.Context, _ component.Host) error {
+func (e *tuiExporter) Start(ctx context.Context, _ component.Host) error {
+	// Start TUI app
 	go func() {
 		err := e.app.Run()
 		if err != nil {
 			fmt.Printf("error running tui app: %s\n", err)
 		}
 	}()
+
+	// Start HTTP server if configured
+	if e.httpServer != nil {
+		go func() {
+			fmt.Printf("Starting HTTP API server on port %d\n", e.httpPort)
+			if err := e.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				fmt.Printf("error running http server: %s\n", err)
+			}
+		}()
+	}
+
 	return nil
 }
 
 // Shutdown stops the TUI exporter
-func (e *tuiExporter) Shutdown(_ context.Context) error {
+func (e *tuiExporter) Shutdown(ctx context.Context) error {
+	// Stop HTTP server if running
+	if e.httpServer != nil {
+		if err := e.httpServer.Shutdown(ctx); err != nil {
+			fmt.Printf("error shutting down http server: %s\n", err)
+		}
+	}
+
+	// Stop TUI app
 	return e.app.Stop()
 }

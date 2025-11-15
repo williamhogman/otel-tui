@@ -6,6 +6,7 @@ import "go.opentelemetry.io/collector/component"
 type Config struct {
 	FromJSONFile     bool   `mapstructure:"from_json_file"`
 	DebugLogFilePath string `mapstructure:"debug_log_file_path"`
+	HTTPPort         int    `mapstructure:"http_port"` // Port for HTTP API server (0 = disabled)
 }
 
 var _ component.Config = (*Config)(nil)

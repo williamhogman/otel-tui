@@ -32,6 +32,7 @@ type Config struct {
 	OTLPHost               string
 	OTLPHTTPPort           int
 	OTLPGRPCPort           int
+	HTTPAPIPort            int
 	EnableZipkin           bool
 	FromJSONFile           string
 	PromTarget             []string
@@ -44,6 +45,7 @@ func NewConfig(
 	otlpHost string,
 	otlpHTTPPort int,
 	otlpGRPCPort int,
+	httpAPIPort int,
 	enableZipkin bool,
 	fromJSONFile string,
 	promTarget []string,
@@ -54,6 +56,7 @@ func NewConfig(
 		OTLPHost:               otlpHost,
 		OTLPHTTPPort:           otlpHTTPPort,
 		OTLPGRPCPort:           otlpGRPCPort,
+		HTTPAPIPort:            httpAPIPort,
 		EnableZipkin:           enableZipkin,
 		FromJSONFile:           fromJSONFile,
 		PromTarget:             promTarget,
