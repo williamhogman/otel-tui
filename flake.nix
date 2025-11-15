@@ -16,7 +16,10 @@
         pkgs = import nixpkgs {
           inherit system;
         };
-        otel-tui = pkgs.callPackage ./otel-tui.nix { };
+        otel-tui = pkgs.callPackage ./otel-tui.nix {
+          src = self;
+          version = "v0.7.0-dev";
+        };
       in
       {
         defaultPackage = otel-tui;
