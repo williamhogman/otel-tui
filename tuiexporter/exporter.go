@@ -90,7 +90,7 @@ func (e *tuiExporter) pushLogs(_ context.Context, logs plog.Logs) error {
 }
 
 // Start runs the TUI exporter
-func (e *tuiExporter) Start(ctx context.Context, _ component.Host) error {
+func (e *tuiExporter) Start(_ context.Context, _ component.Host) error {
 	// Start TUI app only if not in server-only mode
 	if !e.serverOnly {
 		go func() {
@@ -111,10 +111,9 @@ func (e *tuiExporter) Start(ctx context.Context, _ component.Host) error {
 		}()
 	}
 
-	// In server-only mode, keep running (block) so the collector doesn't exit
+	// In server-only mode, just let the collector manage the lifetime
 	if e.serverOnly {
 		fmt.Println("Server-only mode active. Press Ctrl+C to stop.")
-		<-ctx.Done()
 	}
 
 	return nil
